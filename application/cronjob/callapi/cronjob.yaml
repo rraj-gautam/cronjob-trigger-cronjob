@@ -1,0 +1,53 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: call-api
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: trigger-job
+          initContainers:
+          - name: call-api
+            image: rraj4/hello-world-callapi
+            command: [ "python", "call.py" ]
+            env:
+            - name: API_URL
+              value: hello-world-flask.svc.cluster.local 
+            - name: MONGO_URI
+              value: <MONGODB_URL_WITH_USERNAME_PASSWORD>
+            resources:
+             requests:
+               cpu: 50m
+               memory: 128Mi
+             limits:
+               cpu: 100m
+               memory: 256Mi
+          - name: resume-cronjob
+            image: bitnami/kubectl
+            command: ["/bin/bash", "-c"]
+            args: [ "kubectl patch cronjob query-db -p '{\"spec\" : {\"suspend\" : false }}'" ]
+            resources:
+             requests:
+               cpu: 50m
+               memory: 128Mi
+             limits:
+               cpu: 100m
+               memory: 256Mi
+          containers:
+          - name: trigger-cronjob
+            image: bitnami/kubectl
+            command: ["/bin/bash", "-c"]
+            args: [ "kubectl create job query-db-$(date +%m%d%Y%H%M) --from=cronjob/query-db" ]
+            resources:
+             requests:
+               cpu: 50m
+               memory: 128Mi
+             limits:
+               cpu: 100m
+               memory: 256Mi
+          restartPolicy: OnFailure
+

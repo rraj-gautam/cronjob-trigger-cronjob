@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-flask
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-world-flask
+  template:
+    metadata:
+      labels:
+        app: hello-world-flask
+    spec:
+      containers:
+        - name: hello-world-flask
+          image: rraj4/hello-world-flask:latest
+          ports:
+            - containerPort: 5000
+          resources:
+           requests:
+             cpu: 50m
+             memory: 128Mi
+           limits:
+             cpu: 100m
+             memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-flask
+spec:
+  selector:
+    app: hello-world-flask
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+  type: ClusterIP
+

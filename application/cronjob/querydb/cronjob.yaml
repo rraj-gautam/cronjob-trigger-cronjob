@@ -1,0 +1,39 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: query-db
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: trigger-job
+          initContainers:
+          - name: query-db
+            image: rraj4/hello-world-querydb
+            command: [ "python", "query.py" ]
+            env:
+            - name: MONGO_URI
+              value: <MONGODB_URI_WITH_USERNAME_PASSWORD>
+            resources:
+             requests:
+               cpu: 50m
+               memory: 128Mi
+             limits:
+               cpu: 100m
+               memory: 256Mi
+          containers:
+          - name: suspend-cronjob
+            image: bitnami/kubectl
+            command: ["/bin/bash", "-c"]
+            args: [ "kubectl patch cronjobs query-db -p '{\"spec\" : {\"suspend\" : true }}'" ]
+            resources:
+             requests:
+               cpu: 50m
+               memory: 128Mi
+             limits:
+               cpu: 100m
+               memory: 256Mi
+          restartPolicy: OnFailure
