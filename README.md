@@ -7,7 +7,7 @@ Cronjobs to trigger another cronjobs
 
 Note: 2nd Cronjob get triggered only after the 1st cronjob completes successfully.
 
-# Implemnetaion Idea
+# Implementaion Idea
 - Use of SideCar/InitContainers. <br>
 - Disable the 2nd cronjob to stop scheduling on any time. <br>
 - Use `kubectl create job --from=cronjob/<cronjob_name>` to trigger the 2nd cronjob. But before triggering the 2nd cronjob, patch `suspend: false` inorder to make it runnable. <br>
